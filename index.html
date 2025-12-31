@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 — A Moveable Story</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --bg-obsidian: #020205;
+            --text-white: #F5F5F7;
+            
+            /* High-End Festive Palette */
+            --color-sapphire: #0A1428;
+            --color-amethyst: #1A0B2E;
+            --color-emerald: #0B2E24;
+            --color-champagne: #D9D2C5;
+            --glow-soft: rgba(217, 210, 197, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            height: 1200vh; /* Extended for the new finale steps */
+        }
+
+        .viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1500px;
+            overflow: hidden;
+        }
+
+        #celebration-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+        }
+
+        .lens-flare {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            mix-blend-mode: screen;
+            filter: blur(50px);
+            opacity: 0;
+        }
+
+        .canvas-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--bg-obsidian);
+        }
+
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,1) 100%);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .light-blob {
+            position: absolute;
+            width: 150vw;
+            height: 160vw;
+            border-radius: 50%;
+            opacity: 0;
+            mix-blend-mode: screen;
+            filter: blur(160px);
+            will-change: transform, opacity, background;
+        }
+
+        #nebula {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120vw;
+            height: 120vw;
+            background: radial-gradient(circle at center, var(--color-sapphire) 0%, transparent 70%);
+        }
+
+        .stardust {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            transform-style: preserve-3d;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.25;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0.25;
+            mix-blend-mode: overlay;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .phrase {
+            font-family: 'Inter', sans-serif;
+            font-weight: 100;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            letter-spacing: 0.8em;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Highlighting keywords */
+        .phrase strong {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            color: var(--color-champagne);
+            display: inline-block;
+        }
+
+        .char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px) rotateX(-90deg) translateZ(-50px);
+            will-change: transform, opacity, filter;
+        }
+
+        .final-reveal {
+            opacity: 0;
+            transform: scale(0.95) translateZ(-50px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hny-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 1em;
+            font-size: clamp(0.7rem, 2vw, 1.1rem);
+            margin-bottom: 2rem;
+            opacity: 0.8;
+            color: var(--text-white);
+        }
+
+        .year-reveal {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: clamp(6rem, 30vw, 16rem);
+            color: var(--color-champagne);
+            line-height: 0.8;
+            margin-bottom: 2.5rem;
+            /* Upright but elegant */
+            letter-spacing: -0.02em;
+            background: linear-gradient(
+                110deg, 
+                #8E887E 10%, 
+                #F5F5F7 45%, 
+                #FFFFFF 50%, 
+                #F5F5F7 55%, 
+                #8E887E 90%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glint 8s linear infinite;
+            filter: drop-shadow(0 0 30px var(--glow-soft));
+        }
+
+        @keyframes glint { to { background-position: 200% center; } }
+
+        .tagline {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 1.4em;
+            font-size: clamp(0.55rem, 1.2vw, 0.7rem);
+            opacity: 0.4;
+        }
+
+        .scroll-prompt {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.7em;
+            opacity: 0.2;
+            z-index: 30;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scroll-prompt">Scroll to journey</div>
+
+    <div class="viewport">
+        <div class="vignette"></div>
+        <div class="lens-flare" id="mainFlare"></div>
+        <canvas id="celebration-canvas"></canvas>
+        
+        <div class="stardust" id="stardust"></div>
+        
+        <div class="canvas-container">
+            <div id="nebula" class="light-blob"></div>
+        </div>
+
+        <svg class="grain-overlay" style="position: absolute; width: 0; height: 0;">
+            <defs>
+                <filter id="dither">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.99" numOctaves="4" stitchTiles="stitch" />
+                    <feColorMatrix type="saturate" values="0" />
+                    <feComponentTransfer><feFuncR type="linear" slope="0.3" /><feFuncG type="linear" slope="0.3" /><feFuncB type="linear" slope="0.3" /></feComponentTransfer>
+                </filter>
+            </defs>
+        </svg>
+
+        <svg class="grain-overlay" width="100%" height="100%">
+            <rect width="100%" height="100%" filter="url(#dither)" />
+        </svg>
+
+        <div class="content-wrapper">
+            <div id="act1" class="phrase">For the <strong>Dreamers</strong></div>
+            <div id="act2" class="phrase">For the <strong>Ambitious ones</strong></div>
+            <div id="act3" class="phrase">For the <strong>Brave</strong></div>
+            <div id="act4" class="phrase">FOR <strong>YOU</strong></div>
+            
+            <div id="finale" class="final-reveal">
+                <p class="hny-text">Happy New Year</p>
+                <h1 class="year-reveal">2026</h1>
+                <p class="tagline">Your story begins now</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. Kinetic Prep
+        document.querySelectorAll('.phrase').forEach(phrase => {
+            const html = phrase.innerHTML;
+            const wrapChars = (node) => {
+                if (node.nodeType === 3) {
+                    const chars = node.nodeValue.split('').map(char => 
+                        `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`
+                    ).join('');
+                    const span = document.createElement('span');
+                    span.innerHTML = chars;
+                    node.parentNode.replaceChild(span, node);
+                } else if (node.nodeType === 1) {
+                    node.childNodes.forEach(child => wrapChars(child));
+                }
+            };
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            temp.childNodes.forEach(child => wrapChars(child));
+            phrase.innerHTML = temp.innerHTML;
+        });
+
+        // 2. Celebration Canvas
+        const canvas = document.getElementById('celebration-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 100;
+                this.size = Math.random() * 2 + 0.3;
+                this.speedY = Math.random() * -1.2 - 0.4;
+                this.speedX = Math.random() * 0.8 - 0.4;
+                this.life = Math.random() * 100 + 100;
+                this.opacity = Math.random() * 0.4 + 0.1;
+            }
+            update() { this.y += this.speedY; this.x += this.speedX; this.life -= 0.4; if (this.life <= 0) this.reset(); }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        for (let i = 0; i < 90; i++) particles.push(new Particle());
+        function animateCelebration() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateCelebration);
+        }
+        animateCelebration();
+
+        // 3. Stardust
+        const stardust = document.getElementById('stardust');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const depth = Math.random() * -1200 + 400;
+            const size = Math.random() * 1.5 + 0.5;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            gsap.set(star, { z: depth, opacity: Math.random() * 0.3 });
+            stardust.appendChild(star);
+        }
+
+        window.onload = () => {
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "body",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 2,
+                }
+            });
+
+            // ACT 1: Dreamers (Sapphire)
+            tl.to("#nebula", { opacity: 0.4, background: "radial-gradient(circle at center, #0A1428 0%, transparent 70%)", duration: 4 });
+            tl.to("#act1", { opacity: 1, duration: 0.1 });
+            tl.to("#act1 .char", { opacity: 1, translateY: 0, rotateX: 0, translateZ: 0, stagger: 0.08, duration: 3, ease: "back.out(1.5)" }, "-=0.1");
+            tl.to("#act1", { opacity: 0, translateZ: "800px", filter: "blur(20px)", duration: 5 });
+
+            // ACT 2: Ambitious (Amethyst)
+            tl.to("#nebula", { background: "radial-gradient(circle at center, #1A0B2E 0%, transparent 70%)", duration: 4 });
+            tl.to("#act2", { opacity: 1, duration: 0.1 });
+            tl.to("#act2 .char", { opacity: 1, translateY: 0, rotateX: 0, translateZ: 0, stagger: 0.06, duration: 3 });
+            tl.to("#act2", { opacity: 0, scale: 1.4, duration: 5 });
+
+            // ACT 3: Brave (Emerald)
+            tl.to("#nebula", { background: "radial-gradient(circle at center, #0B2E24 0%, transparent 70%)", duration: 4 });
+            tl.to("#act3", { opacity: 1, duration: 0.1 });
+            tl.to("#act3 .char", { opacity: 1, translateY: 0, rotateX: 0, translateZ: 0, stagger: 0.1, duration: 3 });
+            tl.to("#act3", { opacity: 0, translateZ: "600px", filter: "blur(20px)", duration: 5 });
+
+            // ACT 4: FOR YOU (Dimming for reveal)
+            tl.to("#nebula", { opacity: 0.2, duration: 4 });
+            tl.to("#act4", { opacity: 1, duration: 0.1 });
+            tl.to("#act4 .char", { opacity: 1, translateY: 0, rotateX: 0, translateZ: 0, stagger: 0.15, duration: 4 });
+            tl.to("#act4", { opacity: 0, translateZ: "400px", filter: "blur(30px)", duration: 4 });
+
+            // FINALE: Crystal Pivot
+            tl.to("#celebration-canvas", { opacity: 1, duration: 4 }, "-=2");
+            tl.to("#nebula", { opacity: 0.6, scale: 1.4, background: "radial-gradient(circle at center, #333945 0%, transparent 75%)", duration: 8 }, "-=3");
+            
+            tl.to("#finale", { opacity: 1, scale: 1, translateZ: "0px", duration: 10, ease: "power4.out" }, "-=6");
+
+            // Mouse Interaction
+            window.addEventListener('mousemove', (e) => {
+                const mouseX = (e.clientX / window.innerWidth - 0.5);
+                const mouseY = (e.clientY / window.innerHeight - 0.5);
+                gsap.to(".content-wrapper", { rotateY: mouseX * 12, rotateX: -mouseY * 12, duration: 3, ease: "power2.out" });
+                gsap.to("#mainFlare", { x: e.clientX - 250, y: e.clientY - 250, opacity: 0.4, duration: 2 });
+                gsap.to(".final-reveal", { x: mouseX * 20, y: mouseY * 20, duration: 4 });
+            });
+
+            const grainTurb = document.querySelector('feTurbulence[baseFrequency="0.99"]');
+            let seed = 0;
+            function animateGrain() { seed = (seed + 1.2) % 1000; grainTurb.setAttribute('seed', Math.floor(seed)); requestAnimationFrame(animateGrain); }
+            animateGrain();
+        };
+    </script>
+</body>
+</html>
